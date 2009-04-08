@@ -35,8 +35,8 @@ instance Actor Flower where
 	onHit pl self = (addScore pointFlower $ setPlayerType nt pl, Nothing, ev)
 		where
 			nt = case typ of
-				SmallNario	-> SuperNario
-				SuperNario	-> FireNario
+				SmallMonao	-> SuperMonao
+				SuperMonao	-> FireMonao
 				otherwise	-> typ
 			typ = getPlayerType pl
 			ev = [EvScoreAddEfe (x self `div` one) (y self `div` one - chrSize * 2) pointFlower]

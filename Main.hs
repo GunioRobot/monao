@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
--- Nario
+-- Monao
 
 module Main where
 
@@ -294,7 +294,7 @@ renderProc gs imgres sndres sur mixer = do
 
 -- Render information
 renderInfo gs imgres sur = do
-	puts  3 1 "NARIO"
+	puts  3 1 "MONAO"
 	puts  3 2 $ deciWide 6 '0' $ getPlayerScore (pl gs)
 	puts 11 2 ("?*" ++ deciWide 2 '0' (getPlayerCoin $ pl gs))
 	puts 18 1 "WORLD"

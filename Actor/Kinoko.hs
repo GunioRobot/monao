@@ -42,7 +42,7 @@ instance Actor Kinoko where
 	onHit pl self = (addScore pointKinoko $ setPlayerType nt pl, Nothing, ev)
 		where
 			nt = case typ of
-				SmallNario	-> SuperNario
+				SmallMonao	-> SuperMonao
 				otherwise	-> typ
 			typ = getPlayerType pl
 			ev = [EvScoreAddEfe (x self `div` one) (y self `div` one - chrSize * 2) pointKinoko]

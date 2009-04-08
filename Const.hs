@@ -1,7 +1,7 @@
 module Const where
 
 -- Window
-wndTitle = "NARIO in Haskell"
+wndTitle = "Monao in Haskell"
 screenWidth = 256 :: Int
 screenHeight = 224 :: Int
 wndBpp = 32 :: Int

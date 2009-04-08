@@ -1,4 +1,4 @@
--- Player (nario)
+-- Player (monao)
 
 module Player (
 	Player(..),
@@ -48,7 +48,7 @@ stampVy = -8 * gravity
 undeadFrame = frameRate * 2
 
 -- Type of player
-data PlayerType = SmallNario | SuperNario | FireNario
+data PlayerType = SmallMonao | SuperMonao | FireMonao
 	deriving (Eq)
 
 -- State
@@ -76,7 +76,7 @@ data Player = Player {
 	}
 
 newPlayer = Player {
-	pltype = SmallNario,
+	pltype = SmallMonao,
 	plstate = Normal,
 	x = 3 * chrSize * one,
 	y = 13 * chrSize * one,
@@ -105,16 +105,16 @@ patShot = patSit + 1
 patDead = patShot + 2
 
 imgTableSmall = [
-	[ImgNarioLStand, ImgNarioLWalk1, ImgNarioLWalk2, ImgNarioLWalk3, ImgNarioLJump, ImgNarioLSlip, ImgNarioLStand],
-	[ImgNarioRStand, ImgNarioRWalk1, ImgNarioRWalk2, ImgNarioRWalk3, ImgNarioRJump, ImgNarioRSlip, ImgNarioRStand]
+	[ImgMonaoLStand, ImgMonaoLWalk1, ImgMonaoLWalk2, ImgMonaoLWalk3, ImgMonaoLJump, ImgMonaoLSlip, ImgMonaoLStand],
+	[ImgMonaoRStand, ImgMonaoRWalk1, ImgMonaoRWalk2, ImgMonaoRWalk3, ImgMonaoRJump, ImgMonaoRSlip, ImgMonaoRStand]
 	]
 imgTableSuper = [
-	[ImgSNarioLStand, ImgSNarioLWalk1, ImgSNarioLWalk2, ImgSNarioLWalk3, ImgSNarioLJump, ImgSNarioLSlip, ImgSNarioLSit],
-	[ImgSNarioRStand, ImgSNarioRWalk1, ImgSNarioRWalk2, ImgSNarioRWalk3, ImgSNarioRJump, ImgSNarioRSlip, ImgSNarioRSit]
+	[ImgSMonaoLStand, ImgSMonaoLWalk1, ImgSMonaoLWalk2, ImgSMonaoLWalk3, ImgSMonaoLJump, ImgSMonaoLSlip, ImgSMonaoLSit],
+	[ImgSMonaoRStand, ImgSMonaoRWalk1, ImgSMonaoRWalk2, ImgSMonaoRWalk3, ImgSMonaoRJump, ImgSMonaoRSlip, ImgSMonaoRSit]
 	]
 imgTableFire = [
-	[ImgFNarioLStand, ImgFNarioLWalk1, ImgFNarioLWalk2, ImgFNarioLWalk3, ImgFNarioLJump, ImgFNarioLSlip, ImgFNarioLSit, ImgFNarioLShot],
-	[ImgFNarioRStand, ImgFNarioRWalk1, ImgFNarioRWalk2, ImgFNarioRWalk3, ImgFNarioRJump, ImgFNarioRSlip, ImgFNarioRSit, ImgFNarioRShot]
+	[ImgFMonaoLStand, ImgFMonaoLWalk1, ImgFMonaoLWalk2, ImgFMonaoLWalk3, ImgFMonaoLJump, ImgFMonaoLSlip, ImgFMonaoLSit, ImgFMonaoLShot],
+	[ImgFMonaoRStand, ImgFMonaoRWalk1, ImgFMonaoRWalk2, ImgFMonaoRWalk3, ImgFMonaoRJump, ImgFMonaoRSlip, ImgFMonaoRSit, ImgFMonaoRShot]
 	]
 
 
@@ -153,7 +153,7 @@ moveX kp self =
 				-1	-> 0
 				1	-> 1
 		pat'
-			| padd && pltype self /= SmallNario	= patSit
+			| padd && pltype self /= SmallMonao	= patSit
 			| vx' == 0				= patStop
 			| vx' > 0 && lr' == 0	= patSlip
 			| vx' < 0 && lr' == 1	= patSlip
@@ -221,12 +221,12 @@ checkFloor fld self
 checkCeil :: Field -> Player -> (Player, [Event])
 checkCeil fld self
 	| stand self || vy self >= 0 || not isCeil	= (self, [])
-	| otherwise = (self { y = y', vy = 0 }, [EvHitBlock ImgBlock2 cx cy (pltype self /= SmallNario)])
+	| otherwise = (self { y = y', vy = 0 }, [EvHitBlock ImgBlock2 cx cy (pltype self /= SmallMonao)])
 	where
 		yofs = case pltype self of
-			SmallNario	-> 14
-			SuperNario	-> 28
-			FireNario	-> 28
+			SmallMonao	-> 14
+			SuperMonao	-> 28
+			FireMonao	-> 28
 		ytmp = y self - yofs * one
 
 		cx = cellCrd $ x self
@@ -250,7 +250,7 @@ shot kp self
 	| canShot && padPressed kp PadB	= (shotPl, shotEv)
 	| otherwise						= (self, [])
 	where
-		canShot = pltype self == FireNario
+		canShot = pltype self == FireMonao
 		shotPl = self { pat = patShot }
 		shotEv = [	EvAddActor $ ActorWrapper $ newShot (x self) (y self) (lr self),
 					EvSound SndShot
@@ -323,8 +323,8 @@ setPlayerType t self = self { pltype = t }
 setPlayerDamage :: Player -> Player
 setPlayerDamage self
 	| undeadCount self > 0			= self
-	| pltype self == SmallNario		= self { plstate = Dead, pat = patDead, vy = jumpVy, stand = False }
-	| otherwise						= self { pltype = SmallNario, undeadCount = undeadFrame }
+	| pltype self == SmallMonao		= self { plstate = Dead, pat = patDead, vy = jumpVy, stand = False }
+	| otherwise						= self { pltype = SmallMonao, undeadCount = undeadFrame }
 
 -- Stamp enemy
 stampPlayer :: Player -> Player
@@ -345,14 +345,14 @@ renderPlayer sur imgres scrx self = do
 		else return ()
 	where
 		posy = case pltype self of
-			SmallNario	-> sy - chrSize + 1
+			SmallMonao	-> sy - chrSize + 1
 			otherwise	-> sy - chrSize * 2 + 1
 		imgtype
-			| plstate self == Dead	= ImgNarioDead
+			| plstate self == Dead	= ImgMonaoDead
 			| otherwise				= imgtbl !! lr self !! pat self
 		imgtbl = case pltype self of
-			SmallNario	-> imgTableSmall
-			SuperNario	-> imgTableSuper
-			FireNario	-> imgTableFire
+			SmallMonao	-> imgTableSmall
+			SuperMonao	-> imgTableSuper
+			FireMonao	-> imgTableFire
 		sx = x self `div` one - chrSize `div` 2 - scrx
 		sy = y self `div` one - 8
