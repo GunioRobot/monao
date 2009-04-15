@@ -34,8 +34,8 @@ in Haskell
 	SDL
 	http://www.libsdl.org/
 
-	HSDL
-	http://fxp.hp.infoseek.co.jp/haskell/HSDL/
+	Graphics.UI.SDL
+	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL
 
   * Build
 	make

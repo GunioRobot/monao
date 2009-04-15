@@ -6,7 +6,7 @@ http://d.hatena.ne.jp/authorNari/20080422/1208880928
 
 
 
-★操作
+* 操作
 	カーソルキー, ijkl
 		上下左右
 
@@ -21,7 +21,7 @@ http://d.hatena.ne.jp/authorNari/20080422/1208880928
 
 
 
-★ファイル構成
+* ファイル構成
 	data
 		データ
 	data/img
@@ -29,26 +29,26 @@ http://d.hatena.ne.jp/authorNari/20080422/1208880928
 
 
 
-★ビルド
-・必要なもの
+* ビルド
+- 必要なもの
 	Haskell コンパイラ
 
 	SDL
 	http://www.libsdl.org/
 
-	HSDL
-	http://fxp.hp.infoseek.co.jp/haskell/HSDL/
+	Graphics.UI.SDL
+	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL
 
-　○ビルド
+　- ビルド
 	make
 
-　○実行
+　- 実行
 	できた実行ファイルを起動する、または
 	make run
 
 
 
-★参考
+* 参考
 	Super Nario GC
 	http://d.hatena.ne.jp/authorNari/20080422/1208880928
 
