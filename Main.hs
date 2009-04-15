@@ -59,17 +59,16 @@ main = do
 	Graphics.UI.SDL.init [InitVideo]
 	setCaption wndTitle wndTitle
 	sur <- setVideoMode screenWidth screenHeight wndBpp [HWSurface, DoubleBuf, AnyFormat]
-	do
-		mixer <- createMixer
-		strm <- delayedStream (1000000 `div` frameRate) fetch
-		scrs <- process $ map snd $ takeWhile notQuit strm
-		mapM_ (\scr -> scr sur mixer) scrs
+	mixer <- createMixer
+	strm <- delayedStream (1000000 `div` frameRate) fetch
+	scrs <- process $ map snd $ takeWhile notQuit strm
+	mapM_ (\scr -> scr sur mixer) scrs
 	quit
 
 	where
 		-- fetch for environment
 		fetch = do
-			quit <- checkSDLEvent
+			quit <- procSDLEvent
 			ks <- getKeyState
 			return (quit, ks)
 		notQuit = not . fst
@@ -78,15 +77,15 @@ main = do
 -- return result list of action, interval microsec
 delayedStream :: Int -> IO a -> IO [a]
 delayedStream microsec func = unsafeInterleaveIO $ do
---	threadDelay microsec	-- Using this cause serious slow down in Ubuntu (bad precision?)
-	delay (fromInteger (toInteger (microsec `div` 1000)))		-- SDL.Time.delay
+--	threadDelay microsec	-- Using threadDelay cause serious slow down in Ubuntu (precision problem?)
+	Graphics.UI.SDL.delay (fromInteger (toInteger (microsec `div` 1000)))
 	x <- func
 	xs <- delayedStream microsec func
 	return $ x:xs
 
 -- Process SDL events
 -- return True if quit event has come
-checkSDLEvent = do
+procSDLEvent = do
 	ev <- pollEvent
 	case ev of
 		Quit	-> return True
@@ -94,7 +93,7 @@ checkSDLEvent = do
 			| ks == SDLK_ESCAPE -> return True
 			| ks == SDLK_F4 && (KeyModLeftAlt `elem` km || KeyModRightAlt `elem` km) -> return True
 		NoEvent	-> return False
-		_		-> checkSDLEvent
+		_		-> procSDLEvent
 
 
 -- State of Game

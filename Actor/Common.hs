@@ -8,7 +8,6 @@ module Actor.Common (
 
 import Const
 import Field
-import Util (sgn)
 import AppUtil (cellCrd)
 import Player (Player(..), getPlayerVY)
 
@@ -23,7 +22,7 @@ updateActorBase fld (x, y, vx, vy)
 	| otherwise	= (x', y', vx', vy')
 	where
 		x' = x + vx
-		sideWall = isBlock $ fieldRef fld (cellCrd $ x' + sgn vx * 6 * one) (cellCrd $ y - chrSize * one `div` 2)
+		sideWall = isBlock $ fieldRef fld (cellCrd $ x' + signum vx * 6 * one) (cellCrd $ y - chrSize * one `div` 2)
 		vx'
 			| sideWall	= -vx
 			| otherwise	= vx

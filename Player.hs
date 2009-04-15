@@ -126,7 +126,7 @@ moveX kp self =
 		else self'
 	where
 		axtmp = if padd then 0 else (-padl + padr) * nowacc
-		ax = if sgn (axtmp * vx self) < 0 then axtmp * 2 else axtmp
+		ax = if signum (axtmp * vx self) < 0 then axtmp * 2 else axtmp
 		vx'
 			| ax /= 0			= rangeadd (vx self) ax (-maxspd) maxspd
 			| stand self		= friction (vx self) acc
@@ -169,7 +169,7 @@ checkX fld self
 	| dir == 0	= check (-1) $ check 1 $ self
 	| otherwise = check dir $ self
 	where
-		dir = sgn $ vx self
+		dir = signum $ vx self
 		check dx self
 			| isBlock $ fieldRef fld cx cy	= self { x = (x self) - dx * one, vx = 0 }
 			| otherwise						= self

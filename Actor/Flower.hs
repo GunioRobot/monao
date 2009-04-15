@@ -7,7 +7,6 @@ module Actor.Flower (
 
 import Actor (Actor(..))
 import Const
-import Util (sgn)
 import AppUtil (cellCrd, Rect(..), putimg)
 import Images
 import Player (PlayerType(..), getPlayerType, setPlayerType, addScore)

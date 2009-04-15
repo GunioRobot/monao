@@ -18,12 +18,6 @@ lastN n xs = supply n [] xs
 		queue acc [] = acc
 		queue acc (x:xs) = queue (tail acc ++ [x]) xs
 
--- Get sign of number
-sgn x
-	| x > 0		= 1
-	| x < 0		= -1
-	| otherwise	= 0
-
 -- Get n width string of base 10
 deciWide n c = lastN n . (replicate n c ++) . show
 
