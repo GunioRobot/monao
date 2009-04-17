@@ -1,5 +1,5 @@
 
-PROJECT = nario
+PROJECT = monao
 
 SRCS = $(wildcard *.hs) $(wildcard Actor/*.hs)
 OBJDIR = obj

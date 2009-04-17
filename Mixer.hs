@@ -1,6 +1,15 @@
-module Mixer where
+module Mixer (
+	createMixer,
+	playSE,
+	SoundType(..),
+	SoundResource,
+	Mixer,
+	loadSoundResource,
+	soundTypes
+) where
 
 import Graphics.UI.SDL
+import Graphics.UI.SDL.Mixer
 import Data.IORef
 import Data.Maybe (catMaybes)
 import Util (pair)
@@ -8,32 +17,20 @@ import Util (pair)
 type AudioData = ()
 type Mixer = IORef [AudioData]
 
---freq = 22050
---format = AUDIO_S16LSB
---channel = 1
---samples = 4096
+freq = 22050
+format = AudioS16Sys
+channel = 2
+samples = 4096
 
 createMixer = do
 	mixer <- newIORef []
---	openAudio freq format channel samples (cb mixer)
+	openAudio freq format channel samples
 	return mixer
---	where
---		cb mixer len = do
---			wavs <- readIORef mixer
---			lockAudio
---			writeIORef mixer $ filter (not . audioIsEnd) $ map (audioAdvance len) wavs
---			unlockAudio
---			return wavs
 
-playWav mixer Nothing = return ()
---playWav mixer (Just ad) = do
---	pauseAudio 1
---	lockAudio
---	modifyIORef mixer (++ [ad])
---	unlockAudio
---	pauseAudio 0
---	return ()
-playWav mixer _ = return ()
+playSE mixer (Just Nothing) = return ()
+playSE mixer (Just (Just ad)) = do
+	playChannel (-1) ad 1
+	return ()
 
 
 data SoundType =
@@ -42,19 +39,20 @@ data SoundType =
 	|	SndPunch
 	deriving (Eq, Show)
 
-soundFn SndJump = "jump.wav"
-soundFn SndShot = "jump.wav"
-soundFn SndPunch = "jump.wav"
+soundFn SndJump = "jump.ogg"
+soundFn SndShot = "jump.ogg"
+soundFn SndPunch = "jump.ogg"
 
 soundTypes = [SndJump, SndShot, SndPunch]
 
-type SoundResource = [(SoundType, AudioData)]
+type SoundResource = [(SoundType, Maybe Chunk)]
 
 loadSoundResource :: [SoundType] -> IO SoundResource
---loadSoundResource sndtypes = mapM load sndtypes >>= return . catMaybes
---	where
---		load :: SoundType -> IO (Maybe (SoundType, AudioData))
---		load sndtype = do
---			dat <- loadWAV $ ("data/snd/" ++) $ soundFn sndtype
---			return $ dat >>= Just . pair sndtype
-loadSoundResource sndtypes = return []
+loadSoundResource sndtypes = mapM load sndtypes
+	where
+		load :: SoundType -> IO (SoundType, Maybe Chunk)
+		load sndtype = Prelude.flip catch err $ do
+			dat <- loadWAV $ ("data/snd/" ++) $ soundFn sndtype
+			return (sndtype, Just dat)
+			where
+				err _ = return (sndtype, Nothing)

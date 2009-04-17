@@ -36,7 +36,7 @@ import Foreign.Ptr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 
-foreign export ccall "start_hs" main :: IO ()
+foreign export ccall "hs_main" main :: IO ()
 
 -- Background color
 backColor = Pixel 0x5080FF
@@ -228,12 +228,12 @@ doGame fldmap kss = loop (head kss) initialState kss
 
 					where
 						play sndtype = do
-							if False
+							if True
 								then
-									playWav mixer $ lookup sndtype sndres
+									playSE mixer $ lookup sndtype sndres
 								else do
 									-- Instead of play wav, print message
-									--putStrLn $ "play " ++ show sndtype
+									putStrLn $ "play " ++ show sndtype
 									return ()
 
 		initialState = GameGame { pl = newPlayer, fld = fldmap, actors = [], time = 400 * timeBase, snds = [] }

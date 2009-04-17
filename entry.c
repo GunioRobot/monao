@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
   hs_add_root(__stginit_Main);
 #endif
 
-  start_hs();
+  hs_main();
 
   hs_exit();
   return 0;
