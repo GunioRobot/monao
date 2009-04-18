@@ -6,9 +6,6 @@ module Main where
 import Graphics.UI.SDL hiding (Event)
 import Graphics.UI.SDL.Utilities
 import System.IO.Unsafe (unsafeInterleaveIO)
-import Control.Concurrent (threadDelay)
-
---import Control.Exception
 
 import Player
 import Field
@@ -32,9 +29,6 @@ import Mixer
 import Data.List
 import Foreign
 import Foreign.C.Types
-import Foreign.Ptr
-import Foreign.Marshal.Alloc
-import Foreign.Marshal.Array
 
 foreign export ccall "hs_main" main :: IO ()
 
@@ -51,6 +45,14 @@ getKeyState = alloca $ \numkeysPtr -> do
   keysPtr <- sdlGetKeyState numkeysPtr
   numkeys <- peek numkeysPtr
   (map Graphics.UI.SDL.Utilities.toEnum . map fromIntegral . findIndices (== 1)) `fmap` peekArray (fromIntegral numkeys) keysPtr
+
+{- to replace this
+getKeyState :: IO ([SDLKey])
+getKeyState = alloca $ \nkp -> do
+  kp <- sdlGetKeyState nkp
+  let f k = unsafePerformIO $ peekByteOff kp $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k
+  return f
+-}
 
 
 -- Program etrny point
@@ -77,8 +79,7 @@ main = do
 -- return result list of action, interval microsec
 delayedStream :: Int -> IO a -> IO [a]
 delayedStream microsec func = unsafeInterleaveIO $ do
---	threadDelay microsec	-- Using threadDelay cause serious slow down in Ubuntu (precision problem?)
-	Graphics.UI.SDL.delay (fromInteger (toInteger (microsec `div` 1000)))
+	Graphics.UI.SDL.delay $ Prelude.toEnum $ microsec `div` 1000
 	x <- func
 	xs <- delayedStream microsec func
 	return $ x:xs
@@ -189,9 +190,12 @@ hitcheck player actors = foldl proc (player, [], []) actors
 
 -- Game
 doGame :: Field -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
-doGame fldmap kss = loop (head kss) initialState kss
+doGame fldmap kss = start : loop (head kss) initialState kss
 	where
-		loop :: [SDLKey] -> GameGame -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+		start imgres sndres sur mixer = do
+			playBGM mixer $ bgmFn BGMMain
+
+		loop :: ([SDLKey]) -> GameGame -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
 		loop bef gs (ks:kss) = scr' : left ks kss
 			where
 				(scr', gs') = updateProc (keyProc bef ks) gs
@@ -229,7 +233,7 @@ doGame fldmap kss = loop (head kss) initialState kss
 					where
 						play sndtype = do
 							if True
-								then
+								then do
 									playSE mixer $ lookup sndtype sndres
 								else do
 									-- Instead of play wav, print message
@@ -240,7 +244,10 @@ doGame fldmap kss = loop (head kss) initialState kss
 
 
 -- Game over
-doGameOver fldmap kss = doTitle fldmap kss
+doGameOver fldmap kss = end : doTitle fldmap kss
+	where
+		end imgres sndres sur mixer = do
+			stopBGM mixer
 
 
 -- Process events
