@@ -49,9 +49,12 @@ stopBGM mixer = do
 playBGM :: Mixer -> String -> IO ()
 playBGM mixer bgmfn = do
 	stopBGM mixer
-	music <- loadMUS bgmfn
-	playMusic music (-1)
-	writeIORef playingBGM $ Just music
+	maybeMusic <- tryLoadMUS bgmfn
+	case maybeMusic of
+		Just music -> do
+			playMusic music (-1)
+			writeIORef playingBGM $ Just music
+		Nothing -> return ()
 
 data SoundType =
 		SndJump
