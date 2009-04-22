@@ -11,6 +11,7 @@ import Player
 import Field
 import Util
 import AppUtil
+import Pad
 import Const
 import Images
 import Font
@@ -53,6 +54,17 @@ getKeyState = alloca $ \nkp -> do
   let f k = unsafePerformIO $ peekByteOff kp $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k
   return f
 -}
+
+keystate2btn :: (SDLKey -> Bool) -> Int
+keystate2btn ks = u .|. d .|. l .|. r .|. a .|. b
+	where
+		u = press padU [SDLK_UP, SDLK_i]
+		d = press padD [SDLK_DOWN, SDLK_k]
+		l = press padL [SDLK_LEFT, SDLK_j]
+		r = press padR [SDLK_RIGHT, SDLK_l]
+		a = press padA [SDLK_SPACE, SDLK_z]
+		b = press padB [SDLK_LSHIFT, SDLK_RSHIFT]
+		press v ls = if any ks ls then v else 0
 
 
 -- Program etrny point
@@ -187,33 +199,33 @@ hitcheck player actors = foldl proc (player, [], []) actors
 					Nothing		-> ac
 				ev' = ev ++ evtmp
 
-
 -- Game
 doGame :: Field -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
-doGame fldmap kss = start : loop (head kss) initialState (tail kss)
+doGame fldmap kss = start : loop initialPad initialState (tail kss)
 	where
 		start imgres sndres sur mixer = do
 			playBGM mixer $ bgmFn BGMMain
 
-		loop :: ([SDLKey]) -> GameGame -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
-		loop bef gs (ks:kss) = scr' : left ks kss
+		loop :: Pad -> GameGame -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+		loop opad gs (ks:kss) = scr' : left ks kss
 			where
-				(scr', gs') = updateProc (keyProc bef ks) gs
+				pad = updatePad opad $ keystate2btn (`elem` ks)
+				(scr', gs') = updateProc pad gs
 				isPlayerDead = getPlayerY (pl gs') >= (screenHeight + chrSize * 2) * one
 				timeOver = time gs' <= 0
 
 				left ks kss
 					| isPlayerDead || timeOver	= doGameOver fldmap kss
-					| otherwise					= loop ks gs' kss
+					| otherwise					= loop pad gs' kss
 
 		-- Update
-		updateProc :: KeyProc -> GameGame -> (ImageResource -> SoundResource -> Scr, GameGame)
-		updateProc kp gs = (scr', gs')
+		updateProc :: Pad -> GameGame -> (ImageResource -> SoundResource -> Scr, GameGame)
+		updateProc pad gs = (scr', gs')
 			where
 				time' = max 0 (time gs - 1)
 				(fld', screv') = scrollEvent (fld gs) $ getScrollPos (pl gs) `div` chrSize + 18
 
-				(pl', plev) = updatePlayer kp fld' (pl gs)
+				(pl', plev) = updatePlayer pad fld' (pl gs)
 				actors_updates = updateActors (fld gs) (actors gs)
 				actors' = filterActors $ map fst actors_updates
 				ev' = concatMap snd actors_updates

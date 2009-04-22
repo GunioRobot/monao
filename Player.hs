@@ -25,7 +25,8 @@ module Player (
 import Data.Bits ((.&.))
 
 import Util
-import AppUtil (KeyProc, padPressed, padPressing, PadBtn(..), cellCrd, KeyState(..), getImageSurface, Rect(..), putimg)
+import AppUtil (cellCrd, getImageSurface, Rect(..), putimg)
+import Pad
 import Const
 import Images
 import Field
@@ -119,8 +120,8 @@ imgTableFire = [
 
 
 -- Move horizontal
-moveX :: KeyProc -> Player -> Player
-moveX kp self =
+moveX :: Pad -> Player -> Player
+moveX pad self =
 	if stand self
 		then self' { lr = lr', pat = pat', anm = anm' }
 		else self'
@@ -133,15 +134,15 @@ moveX kp self =
 			| otherwise			= vx self
 		x' = max xmin $ (x self) + vx'
 
-		padd = if padPressing kp PadD then True else False
-		padl = if padPressing kp PadL then 1 else 0
-		padr = if padPressing kp PadR then 1 else 0
+		padd = if pressing pad padD then True else False
+		padl = if pressing pad padL then 1 else 0
+		padr = if pressing pad padR then 1 else 0
 		maxspd
 			| not $ stand self	= walkVx `div` 2
-			| padPressing kp PadB	= runVx
+			| pressing pad padB	= runVx
 			| otherwise				= walkVx
 		nowacc
-			| padPressing kp PadB	= acc2
+			| pressing pad padB	= acc2
 			| otherwise				= acc
 		xmin = (scrx self + chrSize `div` 2) * one
 
@@ -236,18 +237,18 @@ checkCeil fld self
 		y' = ((cy + 1) * chrSize + yofs) * one
 
 -- Do jump?
-doJump :: KeyProc -> Player -> (Player, [Event])
-doJump kp self
-	| stand self && padPressed kp PadA	= (self { vy = vy', stand = False, pat = patJump }, [EvSound SndJump])
+doJump :: Pad -> Player -> (Player, [Event])
+doJump pad self
+	| stand self && justPressed pad padA	= (self { vy = vy', stand = False, pat = patJump }, [EvSound SndJump])
 	| otherwise							= (self, [])
 	where
 		vy' = (jumpVy2 - jumpVy) * (abs $ vx self) `div` runVx + jumpVy
 
 
 -- Do shot?
-shot :: KeyProc -> Player -> (Player, [Event])
-shot kp self
-	| canShot && padPressed kp PadB	= (shotPl, shotEv)
+shot :: Pad -> Player -> (Player, [Event])
+shot pad self
+	| canShot && justPressed pad padB	= (shotPl, shotEv)
 	| otherwise						= (self, [])
 	where
 		canShot = pltype self == FireMonao
@@ -258,27 +259,27 @@ shot kp self
 
 
 -- Update
-updatePlayer :: KeyProc -> Field -> Player -> (Player, [Event])
-updatePlayer kp fld self =
+updatePlayer :: Pad -> Field -> Player -> (Player, [Event])
+updatePlayer pad fld self =
 	case plstate self of
-		Normal	-> updateNormal kp fld self'
-		Dead	-> updateDead kp fld self'
+		Normal	-> updateNormal pad fld self'
+		Dead	-> updateDead pad fld self'
 	where
 		self' = decUndead self
 		decUndead pl = pl { undeadCount = max 0 $ undeadCount pl - 1 }
 
 -- In normal state
-updateNormal :: KeyProc -> Field -> Player -> (Player, [Event])
-updateNormal kp fld self = (self3, ev1 ++ ev2 ++ ev3)
+updateNormal :: Pad -> Field -> Player -> (Player, [Event])
+updateNormal pad fld self = (self3, ev1 ++ ev2 ++ ev3)
 	where
-		(self1, ev1) = moveY $ scroll self $ checkX fld $ moveX kp self
+		(self1, ev1) = moveY $ scroll self $ checkX fld $ moveX pad self
 		(self2, ev2) = checkCeil fld self1
-		(self3, ev3) = shot kp self2
-		moveY = doJump kp . checkFloor fld . fall (padPressing kp PadA)
+		(self3, ev3) = shot pad self2
+		moveY = doJump pad . checkFloor fld . fall (pressing pad padA)
 
 -- In dead state
-updateDead :: KeyProc -> Field -> Player -> (Player, [Event])
-updateDead kp fld self = (fall False self, [])
+updateDead :: Pad -> Field -> Player -> (Player, [Event])
+updateDead pad fld self = (fall False self, [])
 
 -- Get scroll position
 getScrollPos :: Player -> Int
