@@ -1,7 +1,6 @@
 #include "HsFFI.h"
-#ifdef __GLASGOW_HASKELL__
-#include "Main_stub.h"
-#endif
+//#include "Main_stub.h"
+extern void hs_main(void);
 
 #ifdef __GLASGOW_HASKELL__
 extern void __stginit_Main ( void );

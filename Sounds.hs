@@ -2,7 +2,7 @@ module Sounds (
 	SoundType(..), soundTypes, soundFn
 	, BGMType(..), bgmFn
 ) where
-import Maybe (fromJust)
+import Data.Maybe (fromJust)
 
 data SoundType =
 		SndJump

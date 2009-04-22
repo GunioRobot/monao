@@ -1,33 +1,19 @@
 
-PROJECT = monao
+RUNHASKELL = runhaskell Setup.lhs
 
-SRCS = $(wildcard *.hs) $(wildcard Actor/*.hs)
-OBJDIR = obj
-OBJS = $(addprefix $(OBJDIR)/,$(subst .hs,.o,$(SRCS)))
+all:	configure build
 
-CSRCS = $(wildcard *.c)
+configure:
+	$(RUNHASKELL) configure
 
-GHCOPT = -O -no-hs-main -odir $(OBJDIR) -hidir $(OBJDIR) -stubdir $(OBJDIR) -I$(OBJDIR)
-
-all:	$(PROJECT).exe
-
-run:
-	./$(PROJECT).exe
-
-$(PROJECT).exe:	objs
-	ghc --make -o $(PROJECT).exe $(GHCOPT) $(SRCS) $(CSRCS)
-
-objs:	$(OBJDIR) $(SRCS)
-	ghc -c --make $(GHCOPT) $(SRCS)
-
-$(OBJDIR):
-	mkdir $(OBJDIR)
+build:
+	$(RUNHASKELL) build
 
 clean:
-	rm -rf $(OBJDIR)
-	rm -f *.manifest
-	rm -f *.exe
-	rm -f *.hi-boot *.o-boot
+	$(RUNHASKELL) clean
+
+run:
+	dist/build/monao/monao.exe
 
 doc:
 	haddock -h -o man -l C:\\ghc\\haddock-2.0.0.0 -B c:\\ghc\\ghc-6.8.2 *.hs

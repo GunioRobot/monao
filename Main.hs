@@ -26,8 +26,6 @@ import Actor.CoinGet
 import Actor.ScoreAdd
 import Mixer
 
-foreign export ccall "hs_main" main :: IO ()
-
 -- Background color
 backColor = Pixel 0x5080FF
 
@@ -37,6 +35,7 @@ type Scr = Surface -> IO ()
 type Resources = (ImageResource, SoundResource)
 
 -- Program etrny point
+foreign export ccall "hs_main" main :: IO ()
 main :: IO ()
 main = do
 	Graphics.UI.SDL.init [InitVideo]
