@@ -4,7 +4,6 @@
 module Main where
 
 import Graphics.UI.SDL hiding (Event)
-import Graphics.UI.SDL.Utilities
 import System.IO.Unsafe (unsafeInterleaveIO)
 
 import Player
@@ -27,10 +26,6 @@ import Actor.CoinGet
 import Actor.ScoreAdd
 import Mixer
 
-import Data.List
-import Foreign
-import Foreign.C.Types
-
 foreign export ccall "hs_main" main :: IO ()
 
 -- Background color
@@ -38,33 +33,6 @@ backColor = Pixel 0x5080FF
 
 -- Display command
 type Scr = Surface -> Mixer -> IO ()
-
-foreign import ccall unsafe "SDL_GetKeyState" sdlGetKeyState :: Ptr CInt -> IO (Ptr Word8)
-
-getKeyState :: IO [SDLKey]
-getKeyState = alloca $ \numkeysPtr -> do
-  keysPtr <- sdlGetKeyState numkeysPtr
-  numkeys <- peek numkeysPtr
-  (map Graphics.UI.SDL.Utilities.toEnum . map fromIntegral . findIndices (== 1)) `fmap` peekArray (fromIntegral numkeys) keysPtr
-
-{- to replace this
-getKeyState :: IO ([SDLKey])
-getKeyState = alloca $ \nkp -> do
-  kp <- sdlGetKeyState nkp
-  let f k = unsafePerformIO $ peekByteOff kp $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k
-  return f
--}
-
-keystate2btn :: (SDLKey -> Bool) -> Int
-keystate2btn ks = u .|. d .|. l .|. r .|. a .|. b
-	where
-		u = press padU [SDLK_UP, SDLK_i]
-		d = press padD [SDLK_DOWN, SDLK_k]
-		l = press padL [SDLK_LEFT, SDLK_j]
-		r = press padR [SDLK_RIGHT, SDLK_l]
-		a = press padA [SDLK_SPACE, SDLK_z]
-		b = press padB [SDLK_LSHIFT, SDLK_RSHIFT]
-		press v ls = if any ks ls then v else 0
 
 
 -- Program etrny point
@@ -121,7 +89,7 @@ data GameGame =
 
 
 -- Process whole key input and return display command list
-process :: [[SDLKey]] -> IO [Scr]
+process :: [SDLKey -> Bool] -> IO [Scr]
 process kss = do
 	imgres <- loadImageResource imageTypes
 	sndres <- loadSoundResource soundTypes
@@ -135,7 +103,7 @@ process kss = do
 		-- Common Action
 		common imgres sndres scr ks sur mixer = do
 			scr imgres sndres sur mixer
-			if SDLK_s `elem` ks
+			if ks SDLK_s
 				then saveBMP sur "ss.bmp" >> return ()
 				else return ()
 			Graphics.UI.SDL.flip sur
@@ -144,10 +112,10 @@ process kss = do
 		final imgres sndres sur mixer = releaseImageResource imgres
 
 -- Title
-doTitle :: Field -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+doTitle :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 doTitle fldmap kss = loop kss
 	where
-		loop :: [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+		loop :: [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 		loop (ks:kss) = res : left ks kss
 
 		res imgres sndres sur mixer = do
@@ -155,8 +123,8 @@ doTitle fldmap kss = loop kss
 			renderTitle imgres sur
 
 		left ks kss
-			| SDLK_SPACE `elem` ks	= doGame fldmap kss
-			| otherwise				= loop kss
+			| ks SDLK_SPACE	= doGame fldmap kss
+			| otherwise		= loop kss
 
 
 -- Scroll event
@@ -200,16 +168,16 @@ hitcheck player actors = foldl proc (player, [], []) actors
 				ev' = ev ++ evtmp
 
 -- Game
-doGame :: Field -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+doGame :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 doGame fldmap kss = start : loop initialPad initialState (tail kss)
 	where
 		start imgres sndres sur mixer = do
 			playBGM mixer $ bgmFn BGMMain
 
-		loop :: Pad -> GameGame -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
+		loop :: Pad -> GameGame -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 		loop opad gs (ks:kss) = scr' : left ks kss
 			where
-				pad = updatePad opad $ keystate2btn (`elem` ks)
+				pad = updatePad opad $ key2btn ks
 				(scr', gs') = updateProc pad gs
 				isPlayerDead = getPlayerY (pl gs') >= (screenHeight + chrSize * 2) * one
 				timeOver = time gs' <= 0

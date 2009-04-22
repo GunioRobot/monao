@@ -1,4 +1,8 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
 module AppUtil (
+	getKeyState,
+	key2btn,
+
 	ImageResource,
 	loadImageResource,
 	releaseImageResource,
@@ -11,14 +15,38 @@ module AppUtil (
 ) where
 
 import Graphics.UI.SDL
+import Graphics.UI.SDL.Utilities
 import Data.Maybe (fromJust)
-import Data.Bits ((.&.), (.|.), complement, shiftL)
+import Data.Bits ((.|.))
+import Foreign
+import Foreign.C.Types
+import Pad
 import Const
 import Images
 
+-- `SDL_GetKeyState' is not defined in Graphic.UI.SDL
+foreign import ccall unsafe "SDL_GetKeyState" sdlGetKeyState :: Ptr CInt -> IO (Ptr Word8)
+
+-- Get keyboard state and return function
+getKeyState :: IO (SDLKey -> Bool)
+getKeyState = alloca $ \nkp -> do
+	kp <- sdlGetKeyState nkp
+	let f = \k -> (/= 0) $ unsafePerformIO $ (peekByteOff kp $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k :: IO Int8)
+	return f
+
+key2btn :: (SDLKey -> Bool) -> Int
+key2btn ks = u .|. d .|. l .|. r .|. a .|. b
+	where
+		u = press padU [SDLK_UP, SDLK_i]
+		d = press padD [SDLK_DOWN, SDLK_k]
+		l = press padL [SDLK_LEFT, SDLK_j]
+		r = press padR [SDLK_RIGHT, SDLK_l]
+		a = press padA [SDLK_SPACE, SDLK_z]
+		b = press padB [SDLK_LSHIFT, SDLK_RSHIFT]
+		press v ls = if any ks ls then v else 0
+
 -- Image resource
 type ImageResource = [(ImageType, Surface)]
-
 
 -- Load image resource
 loadImageResource :: [ImageType] -> IO ImageResource
