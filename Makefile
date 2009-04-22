@@ -13,7 +13,7 @@ clean:
 	$(RUNHASKELL) clean
 
 run:
-	dist/build/monao/monao.exe
+	dist/build/monao/monao.exe || dist/build/monao/monao
 
 doc:
 	haddock -h -o man -l C:\\ghc\\haddock-2.0.0.0 -B c:\\ghc\\ghc-6.8.2 *.hs
