@@ -221,7 +221,7 @@ checkFloor fld self
 checkCeil :: Field -> Player -> (Player, [Event])
 checkCeil fld self
 	| stand self || vy self >= 0 || not isCeil	= (self, [])
-	| otherwise = (self { y = y', vy = 0 }, [EvHitBlock ImgBlock2 cx cy (pltype self /= SmallMonao)])
+	| otherwise = (self { y = y', vy = 0 }, [EvHitBlock ImgBlock2 cx cy (pltype self /= SmallMonao), EvSound SndBreak])
 	where
 		yofs = case pltype self of
 			SmallMonao	-> 14

@@ -63,3 +63,6 @@ in Haskell
 
 	Cyclic import problem in Haskell
 	http://d.hatena.ne.jp/ABA/20060627#p1
+
+	Sound materials
+	http://utm-game-web.hp.infoseek.co.jp/free-sound.htm

@@ -190,7 +190,7 @@ hitcheck player actors = foldl proc (player, [], []) actors
 
 -- Game
 doGame :: Field -> [[SDLKey]] -> [ImageResource -> SoundResource -> Scr]
-doGame fldmap kss = start : loop (head kss) initialState kss
+doGame fldmap kss = start : loop (head kss) initialState (tail kss)
 	where
 		start imgres sndres sur mixer = do
 			playBGM mixer $ bgmFn BGMMain
@@ -244,7 +244,7 @@ doGame fldmap kss = start : loop (head kss) initialState kss
 
 
 -- Game over
-doGameOver fldmap kss = end : doTitle fldmap kss
+doGameOver fldmap kss = end : doTitle fldmap (tail kss)
 	where
 		end imgres sndres sur mixer = do
 			stopBGM mixer

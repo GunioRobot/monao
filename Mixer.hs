@@ -60,6 +60,8 @@ data SoundType =
 		SndJump
 	|	SndShot
 	|	SndPunch
+	|	SndBreak
+	|	SndCoin
 	deriving (Eq, Show)
 
 data BGMType =
@@ -68,13 +70,15 @@ data BGMType =
 
 soundPath = "data/snd/"
 
-soundFn SndJump = "jump.ogg"
-soundFn SndShot = "jump.ogg"
-soundFn SndPunch = "jump.ogg"
+soundFn SndJump = "hoyo.wav"
+soundFn SndShot = "suiteki.wav"
+soundFn SndPunch = "po2.wav"
+soundFn SndBreak = "cha.wav"
+soundFn SndCoin = "puni.wav"
 
 bgmFn BGMMain = soundPath ++ "bgm.mp3"
 
-soundTypes = [SndJump, SndShot, SndPunch]
+soundTypes = [SndJump, SndShot, SndPunch, SndBreak, SndCoin]
 
 type SoundResource = [(SoundType, Maybe Chunk)]
 
