@@ -29,7 +29,7 @@ class Actor a where
 	getHitRect _ = Nothing
 
 	onHit :: Player -> a -> (Player, Maybe ActorWrapper, [Event])
-	onHit pl ac = (pl, Nothing, [])
+	onHit pl _ = (pl, Nothing, [])
 
 
 ----

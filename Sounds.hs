@@ -2,7 +2,6 @@ module Sounds (
 	SoundType(..), soundTypes, soundFn
 	, BGMType(..), bgmFn
 ) where
-import Data.Maybe (fromJust)
 
 data SoundType =
 		SndJump
@@ -12,8 +11,10 @@ data SoundType =
 	|	SndCoin
 	deriving (Eq, Show)
 
+soundTypes :: [SoundType]
 soundTypes = [SndJump, SndShot, SndPunch, SndBreak, SndCoin]
 
+soundFn :: SoundType -> String
 soundFn SndJump = "hoyo.wav"
 soundFn SndShot = "suiteki.wav"
 soundFn SndPunch = "po2.wav"
@@ -25,4 +26,5 @@ data BGMType =
 		BGMMain
 	deriving (Eq, Show)
 
+bgmFn :: BGMType -> String
 bgmFn BGMMain = "bgm.mp3"

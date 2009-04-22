@@ -12,6 +12,7 @@ import Images
 import Player (getPlayerX, stampPlayer, setPlayerDamage, addScore)
 import Event (Event(..))
 
+ofsH, vel, reviveCount :: Int
 ofsH = 15
 vel = 7 * one `div` 2
 reviveCount = 6 * frameRate

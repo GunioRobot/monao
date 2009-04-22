@@ -18,9 +18,11 @@ data Font = Font {
 
 
 -- Put string
+fontPut :: Font -> Surface -> Int -> Int -> String -> IO ()
 fontPut font sur x y str = zipWithM_ (\i c -> fontPutc font sur i y c) [x..] str
 
 -- Put char
+fontPutc :: Font -> Surface -> Int -> Int -> Char -> IO Bool
 fontPutc font sur x y c = do
 	blitSurface (fontSurface font) (Just rc) sur (Just $ Rect (x * fontWidth font) (y * fontHeight font) w h)
 	where

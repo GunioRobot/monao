@@ -12,6 +12,7 @@ import Images
 import Player (setPlayerDamage, stampPlayer, addScore)
 import Event (Event(..))
 
+ofsH :: Int
 ofsH = 15
 
 data Kuribo = Kuribo {
@@ -59,11 +60,12 @@ data StampedKuribo = StampedKuribo {
 	}
 
 instance Actor StampedKuribo where
-	update fld self = (self { ccnt = ccnt self + 1 }, [])
+	update _ self = (self { ccnt = ccnt self + 1 }, [])
 
 	render self imgres scrx sur =
 		putimg sur imgres ImgKuriDead (sx self - scrx) (sy self - 7 - 8)
 
 	bDead self = ccnt self >= frameRate `div` 2
 
+newStampedKuribo :: Int -> Int -> StampedKuribo
 newStampedKuribo sx' sy' = StampedKuribo { sx = sx', sy = sy', ccnt = 0 }

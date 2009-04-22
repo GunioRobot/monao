@@ -19,6 +19,7 @@ data CoinGet = CoinGet {
 	starty :: Int
 	}
 
+imgtbl :: [ImageType]
 imgtbl = [ImgCoin0, ImgCoin1, ImgCoin2, ImgCoin3]
 
 instance Actor CoinGet where

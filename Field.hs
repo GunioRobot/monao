@@ -16,7 +16,7 @@ module Field (
 	chr2img
 ) where
 
-import Graphics.UI.SDL
+import Graphics.UI.SDL (Surface)
 
 import Const
 import Images
@@ -36,6 +36,7 @@ loadField stage = readFile fn >>= return . lines
 		fn = "data/stage" ++ (show stage) ++ ".map"
 
 
+chr2img :: Char -> ImageType
 chr2img '@' = ImgBlock1
 chr2img 'O' = ImgBlock2
 chr2img 'X' = ImgBlock3
@@ -61,8 +62,9 @@ chr2img 'l' = ImgDk10
 chr2img '|' = ImgDk11
 chr2img 'o' = ImgPole0
 chr2img '!' = ImgPole1
-
 chr2img 'K' = ImgBlock4
+
+chr2img _   = undefined
 
 
 isBlock :: Cell -> Bool
@@ -85,6 +87,7 @@ fieldSet fld x y c
 	| otherwise			= fld
 
 
+renderField :: Surface -> ImageResource -> Int -> Field -> IO ()
 renderField sur imgres scrx fld =
 	sequence_ $ concatMap lineProc $ zip [0..] fld
 	where

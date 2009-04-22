@@ -45,6 +45,9 @@ main = do
 	putStrLn "import Data.Maybe (fromJust)"
 
 	putStrLn $ "data ImageType = " ++ intercalate " | " symbols ++ "\tderiving (Eq)"
+	putStrLn $ "imageTypes :: [ImageType]"
 	putStrLn $ "imageTypes = [" ++ intercalate ", " symbols ++ "]"
+	putStrLn $ "imageFilenames :: [String]"
 	putStrLn $ "imageFilenames = [\"" ++ intercalate "\", \"" imgFiles ++ "\"]"
+	putStrLn $ "imageFn :: ImageType -> String"
 	putStrLn $ "imageFn = fromJust . flip lookup (zip imageTypes imageFilenames)"

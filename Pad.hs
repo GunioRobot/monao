@@ -7,7 +7,7 @@ module Pad (
 	justPressed
 ) where
 
-import Data.Bits ((.&.), (.|.), complement, shiftL)
+import Data.Bits ((.&.), complement, shiftL)
 
 -- Pad
 
@@ -16,14 +16,16 @@ data Pad = Pad {
 	prev :: Int
 	}
 
+initialPad :: Pad
 initialPad = Pad { curr = complement 0, prev = complement 0 }
 
-padU = 1 `shiftL` 0 :: Int
-padD = 1 `shiftL` 1 :: Int
-padL = 1 `shiftL` 2 :: Int
-padR = 1 `shiftL` 3 :: Int
-padA = 1 `shiftL` 4 :: Int
-padB = 1 `shiftL` 5 :: Int
+padU, padD, padL, padR, padA, padB :: Int
+padU = 1 `shiftL` 0
+padD = 1 `shiftL` 1
+padL = 1 `shiftL` 2
+padR = 1 `shiftL` 3
+padA = 1 `shiftL` 4
+padB = 1 `shiftL` 5
 
 updatePad :: Pad -> Int -> Pad
 updatePad opad btn =

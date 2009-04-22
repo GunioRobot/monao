@@ -8,7 +8,7 @@ module Actor.Common (
 import Const
 import Field
 import AppUtil (cellCrd)
-import Player (Player(..), getPlayerVY)
+import Player (Player, getPlayerVY)
 
 
 -- Common action
@@ -34,4 +34,4 @@ updateActorBase fld (x, y, vx, vy)
 
 -- Stamp by player?
 stamp :: Player -> (Int, Int) -> Bool
-stamp pl (x, y) = getPlayerVY pl > 0
+stamp pl (_,_) = getPlayerVY pl > 0

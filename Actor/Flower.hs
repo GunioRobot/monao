@@ -6,7 +6,7 @@ module Actor.Flower (
 
 import Actor (Actor(..))
 import Const
-import AppUtil (cellCrd, Rect(..), putimg)
+import AppUtil (Rect(..), putimg)
 import Images
 import Player (PlayerType(..), getPlayerType, setPlayerType, addScore)
 import Event (Event(..))
@@ -20,7 +20,7 @@ data Flower = Flower {
 	}
 
 instance Actor Flower where
-	update fld self = (self, [])
+	update _ self = (self, [])
 
 	render self imgres scrx sur =
 		putimg sur imgres ImgFlower ((x self) `div` one - chrSize `div` 2 - scrx) ((y self) `div` one - 15 - 8)
@@ -32,11 +32,11 @@ instance Actor Flower where
 
 	onHit pl self = (addScore pointFlower $ setPlayerType nt pl, Nothing, ev)
 		where
-			nt = case typ of
+			nt = case pltype of
 				SmallMonao	-> SuperMonao
 				SuperMonao	-> FireMonao
-				otherwise	-> typ
-			typ = getPlayerType pl
+				_			-> pltype
+			pltype = getPlayerType pl
 			ev = [EvScoreAddEfe (x self `div` one) (y self `div` one - chrSize * 2) pointFlower]
 
 

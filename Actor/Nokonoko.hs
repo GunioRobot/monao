@@ -13,6 +13,7 @@ import Images
 import Player (setPlayerDamage, stampPlayer, addScore)
 import Event (Event(..))
 
+ofsH :: Int
 ofsH = 23
 
 data Nokonoko = Nokonoko {

@@ -12,8 +12,8 @@ import Images
 import Player (PlayerType(..), getPlayerType, setPlayerType, addScore)
 import Event (Event(..))
 
+ofsH :: Int
 ofsH = 15
-
 
 data Kinoko = Kinoko {
 	x :: Int,
@@ -42,7 +42,8 @@ instance Actor Kinoko where
 		where
 			nt = case typ of
 				SmallMonao	-> SuperMonao
-				otherwise	-> typ
+				SuperMonao	-> FireMonao
+				_			-> typ
 			typ = getPlayerType pl
 			ev = [EvScoreAddEfe (x self `div` one) (y self `div` one - chrSize * 2) pointKinoko]
 

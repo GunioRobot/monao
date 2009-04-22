@@ -2,7 +2,7 @@ module Event where
 
 import Images (ImageType)
 import Field (Cell)
-import {-# SOURCE #-} Actor (Actor(..), ActorWrapper(..))
+import {-# SOURCE #-} Actor (ActorWrapper(..))
 import Sounds
 
 data Event =

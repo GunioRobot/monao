@@ -8,9 +8,9 @@ import Actor (Actor(..))
 import AppUtil (cellCrd, putimg)
 import Const
 import Images
-import Field (Cell, isBlock, fieldRef)
-import Event (Event(..))
+import Field (isBlock, fieldRef)
 
+velX, velY, size :: Int
 velX = 4 * one
 velY = 3 * one
 size = 8

@@ -26,7 +26,6 @@ import Graphics.UI.SDL hiding (flip)
 import Graphics.UI.SDL.Utilities
 import Graphics.UI.SDL.Mixer
 import Data.Maybe (fromJust)
-import Data.Bits ((.|.))
 import Data.List (findIndices)
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Foreign
@@ -36,6 +35,7 @@ import Const
 import Images
 import Sounds
 
+imagePath, soundPath, bgmPath :: String
 imagePath = "data/img/"
 soundPath = "data/snd/"
 bgmPath = "data/snd/"
@@ -82,6 +82,7 @@ delayedStream microsec func = unsafeInterleaveIO $ do
 
 -- Process SDL events
 -- return True if quit event has come
+procSDLEvent :: IO Bool
 procSDLEvent = do
 	ev <- pollEvent
 	case ev of
@@ -109,7 +110,7 @@ loadImageResource = mapM load
 		setNuki sur = setColorKey sur [SrcColorKey] (Pixel 0) >> return ()		-- Set color key to palet 0
 
 releaseImageResource :: ImageResource -> IO ()
-releaseImageResource = mapM_ (\(t, sur) -> freeSurface sur)
+releaseImageResource = mapM_ (\(_, sur) -> freeSurface sur)
 
 getImageSurface :: ImageResource -> ImageType -> Surface
 getImageSurface imgres = fromJust . (`lookup` imgres)

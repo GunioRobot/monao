@@ -1,7 +1,7 @@
 -- Player (monao)
 
 module Player (
-	Player(..),
+	Player,
 	PlayerType(..),
 	newPlayer,
 	updatePlayer,
@@ -21,11 +21,11 @@ module Player (
 	stampPlayer
 ) where
 
---import Multimedia.SDL (blitSurface, pt)
+import Graphics.UI.SDL (Surface)
 import Data.Bits ((.&.))
 
 import Util
-import AppUtil (cellCrd, getImageSurface, Rect(..), putimg)
+import AppUtil (ImageResource, cellCrd, Rect(..), putimg)
 import Pad
 import Const
 import Images
@@ -35,7 +35,7 @@ import Actor (ActorWrapper(..))
 import Actor.Shot
 import Sounds
 
-
+walkVx, runVx, acc, acc2, jumpVy, jumpVy2, scrollMinX, scrollMaxX, gravity2, stampVy, undeadFrame :: Int
 walkVx = one * 4 `div` 2
 runVx = one * 11 `div` 4
 acc = one `div` 32
@@ -44,7 +44,7 @@ jumpVy = -12 * gravity
 jumpVy2 = -13 * gravity
 scrollMinX = 5 * chrSize + 6
 scrollMaxX = 8 * chrSize
-gravity2 = one `div` 6		-- Aを長押ししたときの重力
+gravity2 = one `div` 6		-- gravity when falling and pressing A btn
 stampVy = -8 * gravity
 undeadFrame = frameRate * 2
 
@@ -76,6 +76,7 @@ data Player = Player {
 	anm :: Int
 	}
 
+newPlayer :: Player
 newPlayer = Player {
 	pltype = SmallMonao,
 	plstate = Normal,
@@ -96,6 +97,7 @@ newPlayer = Player {
 	}
 
 
+patStop, patWalk, walkPatNum, patJump, patSlip, patSit, patShot, patDead :: Int
 patStop = 0
 patWalk = 1
 walkPatNum = 3
@@ -105,6 +107,7 @@ patSit = patSlip + 1
 patShot = patSit + 1
 patDead = patShot + 2
 
+imgTableSmall, imgTableSuper, imgTableFire :: [[ImageType]]
 imgTableSmall = [
 	[ImgMonaoLStand, ImgMonaoLWalk1, ImgMonaoLWalk2, ImgMonaoLWalk3, ImgMonaoLJump, ImgMonaoLSlip, ImgMonaoLStand],
 	[ImgMonaoRStand, ImgMonaoRWalk1, ImgMonaoRWalk2, ImgMonaoRWalk3, ImgMonaoRJump, ImgMonaoRSlip, ImgMonaoRStand]
@@ -150,9 +153,9 @@ moveX pad self =
 
 		lr' =
 			case (-padl + padr) of
-				0	-> lr self
 				-1	-> 0
 				1	-> 1
+				_	-> lr self
 		pat'
 			| padd && pltype self /= SmallMonao	= patSit
 			| vx' == 0				= patStop
@@ -171,14 +174,14 @@ checkX fld self
 	| otherwise = check dir $ self
 	where
 		dir = signum $ vx self
-		check dx self
-			| isBlock $ fieldRef fld cx cy	= self { x = (x self) - dx * one, vx = 0 }
-			| otherwise						= self
+		check dx self'
+			| isBlock $ fieldRef fld cx cy	= self' { x = (x self') - dx * one, vx = 0 }
+			| otherwise						= self'
 			where
-				cx = cellCrd (x self + ofsx dx)
-				cy = cellCrd (y self - chrSize `div` 2 * one)
-				ofsx (-1) = -6 * one
-				ofsx   1  =  5 * one
+				cx = cellCrd (x self' + ofsx dx)
+				cy = cellCrd (y self' - chrSize `div` 2 * one)
+				ofsx 1 =  5 * one
+				ofsx _ = -6 * one
 
 -- Adjust horizontal scroll position
 scroll :: Player -> Player -> Player
@@ -233,7 +236,6 @@ checkCeil fld self
 		cx = cellCrd $ x self
 		cy = cellCrd ytmp
 		isCeil = isBlock $ fieldRef fld cx cy
-		yground y = (cellCrd y) * (chrSize * one)
 		y' = ((cy + 1) * chrSize + yofs) * one
 
 -- Do jump?
@@ -279,7 +281,7 @@ updateNormal pad fld self = (self3, ev1 ++ ev2 ++ ev3)
 
 -- In dead state
 updateDead :: Pad -> Field -> Player -> (Player, [Event])
-updateDead pad fld self = (fall False self, [])
+updateDead _ _ self = (fall False self, [])
 
 -- Get scroll position
 getScrollPos :: Player -> Int
@@ -340,14 +342,15 @@ addScore :: Int -> Player -> Player
 addScore a self = self { score = score self + a }
 
 -- Render
-renderPlayer sur imgres scrx self = do
+renderPlayer :: Surface -> ImageResource -> Int -> Player -> IO ()
+renderPlayer sur imgres scrx_ self = do
 	if undeadCount self == 0 || (undeadCount self .&. 1) /= 0
 		then putimg sur imgres imgtype sx posy
 		else return ()
 	where
 		posy = case pltype self of
 			SmallMonao	-> sy - chrSize + 1
-			otherwise	-> sy - chrSize * 2 + 1
+			_			-> sy - chrSize * 2 + 1
 		imgtype
 			| plstate self == Dead	= ImgMonaoDead
 			| otherwise				= imgtbl !! lr self !! pat self
@@ -355,5 +358,5 @@ renderPlayer sur imgres scrx self = do
 			SmallMonao	-> imgTableSmall
 			SuperMonao	-> imgTableSuper
 			FireMonao	-> imgTableFire
-		sx = x self `div` one - chrSize `div` 2 - scrx
+		sx = x self `div` one - chrSize `div` 2 - scrx_
 		sy = y self `div` one - 8

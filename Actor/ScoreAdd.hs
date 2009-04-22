@@ -9,6 +9,7 @@ import AppUtil (putimg)
 import Const
 import Images
 
+vy :: Int
 vy = -1
 
 data ScoreAdd = ScoreAdd {
@@ -31,6 +32,7 @@ instance Actor ScoreAdd where
 				400		-> Img400
 				500		-> Img500
 				1000	-> Img1000
+				_		-> undefined
 
 	bDead self = cnt self >= frameRate `div` 2
 

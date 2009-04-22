@@ -20,7 +20,7 @@ data AnimBlock = AnimBlock {
 	}
 
 instance Actor AnimBlock where
-	update fld self
+	update _ self
 		| not (bDead self)	= (self', ev')
 		| otherwise			= (self, [])
 
@@ -44,4 +44,4 @@ newAnimBlock cx cy c =
 		cc = case c of
 			'?'	-> '#'
 			'K'	-> '#'
-			x	-> x
+			o	-> o
