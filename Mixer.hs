@@ -1,9 +1,8 @@
 module Mixer (
-	createMixer,
+	initMixer,
 	playSE,
 	SoundType(..),
 	SoundResource,
-	Mixer,
 	loadSoundResource,
 	soundTypes,
 	BGMType(..),
@@ -18,27 +17,24 @@ import Data.Maybe (catMaybes)
 import System.IO.Unsafe (unsafePerformIO)
 
 type AudioData = ()
-type Mixer = IORef [AudioData]
 
 freq = 22050
 format = AudioS16Sys
 channel = 2
 samples = 4096
 
-createMixer = do
-	mixer <- newIORef []
+initMixer = do
 	openAudio freq format channel samples
-	return mixer
 
-playSE mixer (Just Nothing) = return ()
-playSE mixer (Just (Just ad)) = flip catch (\_ -> return ()) $ do
+playSE (Just Nothing) = return ()
+playSE (Just (Just ad)) = flip catch (\_ -> return ()) $ do
 	playChannel (-1) ad 0
 	return ()
 
 playingBGM :: IORef (Maybe Music)
 playingBGM = unsafePerformIO $ newIORef Nothing
 
-stopBGM mixer = do
+stopBGM = do
 	m <- readIORef playingBGM
 	case m of
 		Nothing -> return ()
@@ -46,9 +42,9 @@ stopBGM mixer = do
 			freeMusic mus
 			writeIORef playingBGM Nothing
 
-playBGM :: Mixer -> String -> IO ()
-playBGM mixer bgmfn = do
-	stopBGM mixer
+playBGM :: String -> IO ()
+playBGM bgmfn = do
+	stopBGM
 	maybeMusic <- tryLoadMUS bgmfn
 	case maybeMusic of
 		Just music -> do

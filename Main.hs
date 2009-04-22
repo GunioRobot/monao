@@ -32,7 +32,7 @@ foreign export ccall "hs_main" main :: IO ()
 backColor = Pixel 0x5080FF
 
 -- Display command
-type Scr = Surface -> Mixer -> IO ()
+type Scr = Surface -> IO ()
 
 
 -- Program etrny point
@@ -41,10 +41,10 @@ main = do
 	Graphics.UI.SDL.init [InitVideo]
 	setCaption wndTitle wndTitle
 	sur <- setVideoMode screenWidth screenHeight wndBpp [HWSurface, DoubleBuf, AnyFormat]
-	mixer <- createMixer
+	initMixer
 	strm <- delayedStream (1000000 `div` frameRate) fetch
 	scrs <- process $ map snd $ takeWhile notQuit strm
-	mapM_ (\scr -> scr sur mixer) scrs
+	mapM_ (\scr -> scr sur) scrs
 	quit
 
 	where
@@ -101,15 +101,15 @@ process kss = do
 
 	where
 		-- Common Action
-		common imgres sndres scr ks sur mixer = do
-			scr imgres sndres sur mixer
+		common imgres sndres scr ks sur = do
+			scr imgres sndres sur
 			if ks SDLK_s
 				then saveBMP sur "ss.bmp" >> return ()
 				else return ()
 			Graphics.UI.SDL.flip sur
 			return ()
 		-- Finalize
-		final imgres sndres sur mixer = releaseImageResource imgres
+		final imgres sndres sur = releaseImageResource imgres
 
 -- Title
 doTitle :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
@@ -118,7 +118,7 @@ doTitle fldmap kss = loop kss
 		loop :: [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 		loop (ks:kss) = res : left ks kss
 
-		res imgres sndres sur mixer = do
+		res imgres sndres sur = do
 			fillRect sur Nothing backColor
 			renderTitle imgres sur
 
@@ -171,8 +171,8 @@ hitcheck player actors = foldl proc (player, [], []) actors
 doGame :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 doGame fldmap kss = start : loop initialPad initialState (tail kss)
 	where
-		start imgres sndres sur mixer = do
-			playBGM mixer $ bgmFn BGMMain
+		start imgres sndres sur = do
+			playBGM $ bgmFn BGMMain
 
 		loop :: Pad -> GameGame -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
 		loop opad gs (ks:kss) = scr' : left ks kss
@@ -203,18 +203,18 @@ doGame fldmap kss = start : loop initialPad initialState (tail kss)
 				gstmp = gs { pl = pl'', fld = fld', actors = actors'', time = time' }
 				allEvent = plev ++ ev' ++ screv' ++ ev''
 				gs' = procEvent gstmp allEvent
-				scr' imgres sndres sur mixer = do
+				scr' imgres sndres sur = do
 					mapM_ (\ev -> case ev of
 							EvSound sndtype	->	play sndtype
 							otherwise		->	return ()
 						) allEvent
-					renderProc gs' imgres sndres sur mixer
+					renderProc gs' imgres sndres sur
 
 					where
 						play sndtype = do
 							if True
 								then do
-									playSE mixer $ lookup sndtype sndres
+									playSE $ lookup sndtype sndres
 								else do
 									-- Instead of play wav, print message
 									putStrLn $ "play " ++ show sndtype
@@ -226,8 +226,8 @@ doGame fldmap kss = start : loop initialPad initialState (tail kss)
 -- Game over
 doGameOver fldmap kss = end : doTitle fldmap (tail kss)
 	where
-		end imgres sndres sur mixer = do
-			stopBGM mixer
+		end imgres sndres sur = do
+			stopBGM
 
 
 -- Process events
@@ -266,7 +266,7 @@ procEvent gs ev = foldl proc gs ev
 
 -- Render
 renderProc :: GameGame -> ImageResource -> SoundResource -> Scr
-renderProc gs imgres sndres sur mixer = do
+renderProc gs imgres sndres sur = do
 	fillRect sur Nothing backColor
 
 	let scrx = getScrollPos (pl gs)
