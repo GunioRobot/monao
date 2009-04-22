@@ -39,6 +39,9 @@ http://d.hatena.ne.jp/authorNari/20080422/1208880928
 	Graphics.UI.SDL
 	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL
 
+	Graphics.UI.SDL.Mixer
+	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL-mixer
+
 　- ビルド
 	make
 

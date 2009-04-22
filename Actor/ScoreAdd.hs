@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Score add animation
+﻿-- Score add animation
 
 module Actor.ScoreAdd (
 	newScoreAdd

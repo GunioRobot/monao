@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Tortoise
+﻿-- Tortoise
 
 module Actor.Nokonoko (
 	newNokonoko

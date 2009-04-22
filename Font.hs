@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Bitmap font
+﻿-- Bitmap font
 module Font (
 	Font(..),
 	fontPut,

@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Flower
+﻿-- Flower
 
 module Actor.Flower (
 	newFlower

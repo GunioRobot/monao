@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Get coin animation
+﻿-- Get coin animation
 
 module Actor.CoinGet (
 	newCoinGet

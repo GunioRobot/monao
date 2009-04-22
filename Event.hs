@@ -3,7 +3,7 @@ module Event where
 import Images (ImageType)
 import Field (Cell)
 import {-# SOURCE #-} Actor (Actor(..), ActorWrapper(..))
-import Mixer
+import Sounds
 
 data Event =
 		-- Hit block: x y super?

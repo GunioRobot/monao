@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Common action
+﻿-- Common action
 
 module Actor.Common (
 	updateActorBase,
@@ -12,9 +11,9 @@ import AppUtil (cellCrd)
 import Player (Player(..), getPlayerVY)
 
 
--- 共通動作
+-- Common action
 {-
-	左右に移動、壁にぶつかったら反転、下に何もなかったら落下
+	Move horizontally, turn when hit wall, fall when no floor.
 -}
 updateActorBase :: Field -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
 updateActorBase fld (x, y, vx, vy)
@@ -33,6 +32,6 @@ updateActorBase fld (x, y, vx, vy)
 		groundy' = (cellCrd y') * one * chrSize
 
 
--- プレーヤーに踏みつけられた？
+-- Stamp by player?
 stamp :: Player -> (Int, Int) -> Bool
 stamp pl (x, y) = getPlayerVY pl > 0

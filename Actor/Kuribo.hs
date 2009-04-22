@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Kuribo
+﻿-- Kuribo
 
 module Actor.Kuribo (
 	newKuribo

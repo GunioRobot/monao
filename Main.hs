@@ -4,7 +4,6 @@
 module Main where
 
 import Graphics.UI.SDL hiding (Event)
-import System.IO.Unsafe (unsafeInterleaveIO)
 
 import Player
 import Field
@@ -13,6 +12,7 @@ import AppUtil
 import Pad
 import Const
 import Images
+import Sounds
 import Font
 import Event
 import Actor
@@ -34,6 +34,7 @@ backColor = Pixel 0x5080FF
 -- Display command
 type Scr = Surface -> IO ()
 
+type Resources = (ImageResource, SoundResource)
 
 -- Program etrny point
 main :: IO ()
@@ -55,28 +56,6 @@ main = do
 			return (quit, ks)
 		notQuit = not . fst
 
--- Delayed stream
--- return result list of action, interval microsec
-delayedStream :: Int -> IO a -> IO [a]
-delayedStream microsec func = unsafeInterleaveIO $ do
-	Graphics.UI.SDL.delay $ Prelude.toEnum $ microsec `div` 1000
-	x <- func
-	xs <- delayedStream microsec func
-	return $ x:xs
-
--- Process SDL events
--- return True if quit event has come
-procSDLEvent = do
-	ev <- pollEvent
-	case ev of
-		Quit	-> return True
-		KeyDown (Keysym { symKey = ks, symModifiers = km } )
-			| ks == SDLK_ESCAPE -> return True
-			| ks == SDLK_F4 && (KeyModLeftAlt `elem` km || KeyModRightAlt `elem` km) -> return True
-		NoEvent	-> return False
-		_		-> procSDLEvent
-
-
 -- State of Game
 data GameGame =
 	GameGame {
@@ -87,22 +66,21 @@ data GameGame =
 		snds :: [SoundType]
 	}
 
-
 -- Process whole key input and return display command list
-process :: [SDLKey -> Bool] -> IO [Scr]
+process :: [KeyProc] -> IO [Scr]
 process kss = do
 	imgres <- loadImageResource imageTypes
 	sndres <- loadSoundResource soundTypes
 	fldmap <- loadField 0
 
 	let tmpscrs = doTitle fldmap kss
-	let scrs = zipWith (common imgres sndres) tmpscrs kss
+	let scrs = zipWith (action (imgres,sndres)) tmpscrs kss
 	return $ scrs ++ [final imgres sndres]
 
 	where
 		-- Common Action
-		common imgres sndres scr ks sur = do
-			scr imgres sndres sur
+		action resources scr ks sur = do
+			scr resources sur
 			if ks SDLK_s
 				then saveBMP sur "ss.bmp" >> return ()
 				else return ()
@@ -112,13 +90,13 @@ process kss = do
 		final imgres sndres sur = releaseImageResource imgres
 
 -- Title
-doTitle :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
+doTitle :: Field -> [KeyProc] -> [Resources -> Scr]
 doTitle fldmap kss = loop kss
 	where
-		loop :: [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
+		loop :: [KeyProc] -> [Resources -> Scr]
 		loop (ks:kss) = res : left ks kss
 
-		res imgres sndres sur = do
+		res resources@(imgres,_) sur = do
 			fillRect sur Nothing backColor
 			renderTitle imgres sur
 
@@ -168,13 +146,13 @@ hitcheck player actors = foldl proc (player, [], []) actors
 				ev' = ev ++ evtmp
 
 -- Game
-doGame :: Field -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
+doGame :: Field -> [KeyProc] -> [Resources -> Scr]
 doGame fldmap kss = start : loop initialPad initialState (tail kss)
 	where
-		start imgres sndres sur = do
-			playBGM $ bgmFn BGMMain
+		start resources sur = do
+			playBGM $ bgmPath ++ bgmFn BGMMain
 
-		loop :: Pad -> GameGame -> [SDLKey -> Bool] -> [ImageResource -> SoundResource -> Scr]
+		loop :: Pad -> GameGame -> [KeyProc] -> [Resources -> Scr]
 		loop opad gs (ks:kss) = scr' : left ks kss
 			where
 				pad = updatePad opad $ key2btn ks
@@ -187,7 +165,7 @@ doGame fldmap kss = start : loop initialPad initialState (tail kss)
 					| otherwise					= loop pad gs' kss
 
 		-- Update
-		updateProc :: Pad -> GameGame -> (ImageResource -> SoundResource -> Scr, GameGame)
+		updateProc :: Pad -> GameGame -> (Resources -> Scr, GameGame)
 		updateProc pad gs = (scr', gs')
 			where
 				time' = max 0 (time gs - 1)
@@ -203,12 +181,12 @@ doGame fldmap kss = start : loop initialPad initialState (tail kss)
 				gstmp = gs { pl = pl'', fld = fld', actors = actors'', time = time' }
 				allEvent = plev ++ ev' ++ screv' ++ ev''
 				gs' = procEvent gstmp allEvent
-				scr' imgres sndres sur = do
+				scr' resources@(_, sndres) sur = do
 					mapM_ (\ev -> case ev of
 							EvSound sndtype	->	play sndtype
 							otherwise		->	return ()
 						) allEvent
-					renderProc gs' imgres sndres sur
+					renderProc gs' resources sur
 
 					where
 						play sndtype = do
@@ -226,7 +204,7 @@ doGame fldmap kss = start : loop initialPad initialState (tail kss)
 -- Game over
 doGameOver fldmap kss = end : doTitle fldmap (tail kss)
 	where
-		end imgres sndres sur = do
+		end resources sur = do
 			stopBGM
 
 
@@ -265,8 +243,8 @@ procEvent gs ev = foldl proc gs ev
 		proc gs (EvSound sndtype) = gs
 
 -- Render
-renderProc :: GameGame -> ImageResource -> SoundResource -> Scr
-renderProc gs imgres sndres sur = do
+renderProc :: GameGame -> Resources -> Scr
+renderProc gs (imgres,sndres) sur = do
 	fillRect sur Nothing backColor
 
 	let scrx = getScrollPos (pl gs)

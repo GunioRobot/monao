@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Block bounce animation
+﻿-- Block bounce animation
 
 module Actor.AnimBlock (
 	newAnimBlock

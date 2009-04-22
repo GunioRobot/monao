@@ -33,7 +33,7 @@ import Field
 import Event
 import Actor (ActorWrapper(..))
 import Actor.Shot
-import Mixer
+import Sounds
 
 
 walkVx = one * 4 `div` 2

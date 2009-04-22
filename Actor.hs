@@ -1,5 +1,4 @@
 ﻿{-# LANGUAGE ExistentialQuantification #-}
--- -*- mode: haskell; Encoding: UTF-8 -*-
 
 -- Object that appear in the game
 

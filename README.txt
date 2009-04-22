@@ -37,6 +37,9 @@ in Haskell
 	Graphics.UI.SDL
 	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL
 
+	Graphics.UI.SDL.Mixer
+	http://hackage.haskell.org/cgi-bin/hackage-scripts/package/SDL-mixer
+
   * Build
 	make
 

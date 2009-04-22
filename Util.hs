@@ -21,7 +21,7 @@ lastN n xs = supply n [] xs
 -- Get n width string of base 10
 deciWide n c = lastN n . (replicate n c ++) . show
 
--- Add value
+-- Add value boundary
 rangeadd x d x0 x1
 	| d > 0 && x < x1	= min (x + d) x1
 	| d < 0 && x > x0	= max (x + d) x0

@@ -1,5 +1,4 @@
-﻿-- -*- mode: haskell; Encoding: UTF-8 -*-
--- Shell of tortoise
+﻿-- Shell of tortoise
 
 module Actor.Koura (
 	newKoura
