@@ -18,6 +18,7 @@ import Graphics.UI.SDL
 import Graphics.UI.SDL.Utilities
 import Data.Maybe (fromJust)
 import Data.Bits ((.|.))
+import Data.List (findIndices)
 import Foreign
 import Foreign.C.Types
 import Pad
@@ -29,20 +30,28 @@ foreign import ccall unsafe "SDL_GetKeyState" sdlGetKeyState :: Ptr CInt -> IO (
 
 -- Get keyboard state and return function
 getKeyState :: IO (SDLKey -> Bool)
-getKeyState = alloca $ \nkp -> do
-	kp <- sdlGetKeyState nkp
-	let f = \k -> (/= 0) $ unsafePerformIO $ (peekByteOff kp $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k :: IO Int8)
-	return f
+getKeyState = alloca $ \numkeysPtr -> do
+	keysPtr <- sdlGetKeyState numkeysPtr
+	if True
+		then do		-- for anarchy: Use unsafePerformIO
+			let f = \k -> (/= 0) $ unsafePerformIO $ (peekByteOff keysPtr $ fromIntegral $ Graphics.UI.SDL.Utilities.fromEnum k :: IO Word8)
+			return f
+		else do		-- for conservative
+			numkeys <- peek numkeysPtr
+			keys <- (map Graphics.UI.SDL.Utilities.toEnum . map fromIntegral . findIndices (== 1)) `fmap` peekArray (fromIntegral numkeys) keysPtr
+			return $ (`elem` keys)
 
 key2btn :: (SDLKey -> Bool) -> Int
-key2btn ks = u .|. d .|. l .|. r .|. a .|. b
+key2btn ks = foldl (\r -> (r .|.) . uncurry press) 0 btns
 	where
-		u = press padU [SDLK_UP, SDLK_i]
-		d = press padD [SDLK_DOWN, SDLK_k]
-		l = press padL [SDLK_LEFT, SDLK_j]
-		r = press padR [SDLK_RIGHT, SDLK_l]
-		a = press padA [SDLK_SPACE, SDLK_z]
-		b = press padB [SDLK_LSHIFT, SDLK_RSHIFT]
+		btns = [
+			(padU, [SDLK_UP, SDLK_i]),
+			(padD, [SDLK_DOWN, SDLK_k]),
+			(padL, [SDLK_LEFT, SDLK_j]),
+			(padR, [SDLK_RIGHT, SDLK_l]),
+			(padA, [SDLK_SPACE, SDLK_z]),
+			(padB, [SDLK_LSHIFT, SDLK_RSHIFT])
+			]
 		press v ls = if any ks ls then v else 0
 
 -- Image resource
