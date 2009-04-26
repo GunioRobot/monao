@@ -27,4 +27,4 @@ data BGMType =
 	deriving (Eq, Show)
 
 bgmFn :: BGMType -> String
-bgmFn BGMMain = "bgm.mp3"
+bgmFn BGMMain = "main.mp3"
