@@ -5,6 +5,7 @@ module Main where
 
 import Data.Maybe (fromJust)
 import Graphics.UI.SDL hiding (Event)
+import System.Environment (getArgs)
 
 import Player
 import Field
@@ -36,13 +37,19 @@ type Scr = Surface -> IO ()
 
 type Resources = (ImageResource, SoundResource)
 
+sdlInitFlags :: [SurfaceFlag]
+sdlInitFlags = [HWSurface, DoubleBuf, AnyFormat]
+
 -- Program etrny point
 foreign export ccall "hs_main" main :: IO ()
 main :: IO ()
 main = do
+	args <- getArgs
+	let flags = if not (null args) && head args == "--fullscreen" then Fullscreen : sdlInitFlags else sdlInitFlags
+
 	Graphics.UI.SDL.init [InitVideo]
 	setCaption wndTitle wndTitle
-	sur <- setVideoMode screenWidth screenHeight wndBpp [HWSurface, DoubleBuf, AnyFormat]
+	sur <- setVideoMode screenWidth screenHeight wndBpp flags
 	initMixer
 	strm <- delayedStream (1000000 `div` frameRate) fetch
 	scrs <- process $ map snd $ takeWhile notQuit strm
