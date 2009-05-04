@@ -32,24 +32,22 @@ import Mixer
 backColor :: Pixel
 backColor = Pixel 0x5080FF
 
+black :: Pixel
+black = Pixel 0x000000
+
 -- Display command
 type Scr = Surface -> IO ()
 
 type Resources = (ImageResource, SoundResource)
-
-sdlInitFlags :: [SurfaceFlag]
-sdlInitFlags = [HWSurface, DoubleBuf, AnyFormat]
 
 -- Program etrny point
 foreign export ccall "hs_main" main :: IO ()
 main :: IO ()
 main = do
 	args <- getArgs
-	let flags = if not (null args) && head args == "--fullscreen" then Fullscreen : sdlInitFlags else sdlInitFlags
-
 	Graphics.UI.SDL.init [InitVideo]
 	setCaption wndTitle wndTitle
-	sur <- setVideoMode screenWidth screenHeight wndBpp flags
+	sur <- setVideoMode screenWidth screenHeight wndBpp $ flags args
 	initMixer
 	strm <- delayedStream (1000000 `div` frameRate) fetch
 	scrs <- process $ map snd $ takeWhile notQuit strm
@@ -63,11 +61,17 @@ main = do
 			ks <- getKeyState
 			return (bQuit, ks)
 		notQuit = not . fst
+		flags args =
+			if not (null args) && head args == "--fullscreen"
+				then Fullscreen : commonFlags
+				else commonFlags
+		commonFlags = [HWSurface, DoubleBuf, AnyFormat]
 
 -- State of Game
 data GameGame =
 	GameGame {
 		pl_of :: Player,
+		num_pl_of :: Int,
 		fld_of :: Field,
 		actors_of :: [ActorWrapper],
 		time_of :: Int,
@@ -105,13 +109,16 @@ doTitle fldmap keyprocs = loop keyprocs
 		loop (ks:kss) = res : left ks kss
 		loop [] = undefined
 
-		res (imgres,_) sur = do
+		res resources@(imgres,_) sur = do
 			fillRect sur Nothing backColor
+			renderProc initialState resources sur
 			renderTitle imgres sur
 
 		left ks kss
 			| ks SDLK_SPACE	= doGame fldmap kss
 			| otherwise		= loop kss
+
+		initialState = GameGame { pl_of = newPlayer, num_pl_of = 1, fld_of = fldmap, actors_of = [], time_of = 400 * timeBase, snds_of = [] }
 
 
 -- Scroll event
@@ -157,7 +164,34 @@ hitcheck player actors = foldl proc (player, [], []) actors
 
 -- Game
 doGame :: Field -> [KeyProc] -> [Resources -> Scr]
-doGame fldmap keyprocs = start : loop initialPad initialState (tail keyprocs)
+doGame fldmap keyprocs = doDispRest fldmap initialState keyprocs
+	where
+		initialState = GameGame { pl_of = newPlayer, num_pl_of = 1, fld_of = fldmap, actors_of = [], time_of = 400 * timeBase, snds_of = [] }
+
+-- Game
+doDispRest :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doDispRest fldmap gs keyprocs =
+	replicate frameCount disp ++ doGameMain fldmap gs' (drop frameCount keyprocs)
+	where
+		frameCount = 120
+
+		disp (imgres,_) sur = do
+			fillRect sur Nothing black
+			renderInfo gs imgres sur
+			puts 11 9 "WORLD 1-1"
+
+			putimg sur imgres ImgMonaoRStand (12*8) (12*8)
+
+			puts 15 13 $ "*  " ++ show (num_pl_of gs)
+			where
+				puts = fontPut font sur
+				font = Font (getImageSurface imgres ImgFont) 8 8 16
+
+		gs' = gs { pl_of = newPlayer }
+
+-- Game
+doGameMain :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doGameMain fldmap gameState keyprocs = start : loop initialPad gameState (tail keyprocs)
 	where
 		start _ _ = do
 			playBGM $ bgmPath ++ bgmFn BGMMain
@@ -171,7 +205,7 @@ doGame fldmap keyprocs = start : loop initialPad initialState (tail keyprocs)
 				timeOver = time_of gs' <= 0
 
 				left
-					| isPlayerDead || timeOver	= doGameOver fldmap kss
+					| isPlayerDead || timeOver	= doPlayerDead fldmap gs kss
 					| otherwise					= loop pad gs' kss
 		loop _ _ [] = undefined
 
@@ -209,16 +243,33 @@ doGame fldmap keyprocs = start : loop initialPad initialState (tail keyprocs)
 									putStrLn $ "play " ++ show sndtype
 									return ()
 
-		initialState = GameGame { pl_of = newPlayer, fld_of = fldmap, actors_of = [], time_of = 400 * timeBase, snds_of = [] }
-
-
--- Game over
-doGameOver :: Field -> [KeyProc] -> [Resources -> Scr]
-doGameOver fldmap kss = end : doTitle fldmap (tail kss)
+-- PlayerDead
+doPlayerDead :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doPlayerDead fldmap gs keyprocs =
+	if num_pl_of gs > 1
+		then doDispRest fldmap gs' keyprocs
+		else doGameOver fldmap gs' keyprocs
 	where
+		gs' = gs { num_pl_of = num_pl_of gs - 1 }
+
+-- GameOver
+doGameOver :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doGameOver fldmap gameState keyprocs =
+	end : replicate frameCount disp ++ doTitle fldmap (drop frameCount $ tail keyprocs)
+	where
+		frameCount = 120
+
 		end _ _ = do
 			stopBGM
 
+		disp (imgres,_) sur = do
+			fillRect sur Nothing black
+			renderInfo gameState imgres sur
+			puts 11 15 "GAME OVER"
+
+			where
+				puts = fontPut font sur
+				font = Font (getImageSurface imgres ImgFont) 8 8 16
 
 -- Process events
 procEvent :: GameGame -> [Event] -> GameGame
