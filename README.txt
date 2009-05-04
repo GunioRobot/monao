@@ -62,7 +62,7 @@ in Haskell
 	http://d.hatena.ne.jp/tanakh/20040803#p1
 
 	Existential type
-	http://d.hatena.ne.jp/syd_syd/20080805#p2
+	http://d.hatena.ne.jp/keigoi/20080805/p2
 
 	Cyclic import problem in Haskell
 	http://d.hatena.ne.jp/ABA/20060627#p1
