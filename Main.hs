@@ -173,7 +173,7 @@ doDispRest :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
 doDispRest fldmap gs keyprocs =
 	replicate frameCount disp ++ doGameMain fldmap gs' (drop frameCount keyprocs)
 	where
-		frameCount = 120
+		frameCount = 30	--120
 
 		disp (imgres,_) sur = do
 			fillRect sur Nothing black
