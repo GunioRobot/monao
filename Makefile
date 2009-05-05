@@ -1,6 +1,8 @@
 
 RUNHASKELL = runhaskell Setup.lhs
 
+SRCS = $(wildcard *.hs) $(wildcard Actor/*.hs)
+
 all:	build
 
 configure:
@@ -14,6 +16,9 @@ clean:
 
 run:
 	dist/build/monao/monao
+
+run-fullscreen:
+	dist/build/monao/monao --fullscreen
 
 doc:
 	haddock -h -o man -l C:\\ghc\\haddock-2.0.0.0 -B c:\\ghc\\ghc-6.8.2 *.hs

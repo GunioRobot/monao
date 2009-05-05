@@ -201,12 +201,18 @@ doGameMain fldmap gameState keyprocs = start : loop initialPad gameState (tail k
 			where
 				pad = updatePad opad $ key2btn ks
 				(scr', gs') = updateProc pad gs
-				isPlayerDead = getPlayerY (pl_of gs') >= (screenHeight + chrSize * 2) * one
+--				isPlayerDead = getPlayerY (pl_of gs') >= (screenHeight + chrSize * 2) * one
+				isPlayerDead = getPlayerDead (pl_of gs') || getPlayerY (pl_of gs') >= (screenHeight + chrSize * 2) * one
 				timeOver = time_of gs' <= 0
 
 				left
 					| isPlayerDead || timeOver	= doPlayerDead fldmap gs kss
+					| isGoal					= doGoal fldmap gs kss
 					| otherwise					= loop pad gs' kss
+
+				isGoal = getPlayerX (pl_of gs') >= pollx * 16 * one
+				pollx = length $ takeWhile (/= 'o') (fld_of gs' !! 2)
+
 		loop _ _ [] = undefined
 
 		-- Update
@@ -243,6 +249,36 @@ doGameMain fldmap gameState keyprocs = start : loop initialPad gameState (tail k
 									putStrLn $ "play " ++ show sndtype
 									return ()
 
+-- Goal
+doGoal :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doGoal fldmap gameState keyprocs =
+	end : loop initialPad gameState (tail keyprocs)
+	where
+		end _ _ = do
+			stopBGM
+
+		loop :: Pad -> GameGame -> [KeyProc] -> [Resources -> Scr]
+		loop opad gs (ks:kss) = scr' : left
+			where
+				pad = updatePad opad $ key2btn ks
+				(scr', gs') = updateProc pad gs
+				left		= loop pad gs' kss
+
+		updateProc :: Pad -> GameGame -> (Resources -> Scr, GameGame)
+		updateProc pad gs = (scr', gs)
+			where
+				scr' resources@(_, sndres) sur = do
+					renderProc gs resources sur
+
+		disp (imgres,_) sur = do
+			fillRect sur Nothing black
+			renderInfo gameState imgres sur
+			puts 11 15 "GOAL"
+
+			where
+				puts = fontPut font sur
+				font = Font (getImageSurface imgres ImgFont) 8 8 16
+
 -- PlayerDead
 doPlayerDead :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
 doPlayerDead fldmap gs keyprocs =
@@ -251,6 +287,24 @@ doPlayerDead fldmap gs keyprocs =
 		else doGameOver fldmap gs' keyprocs
 	where
 		gs' = gs { num_pl_of = num_pl_of gs - 1 }
+
+{-
+-- PlayerDead
+doPlayerDead :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]
+doPlayerDead fldmap gameState keyprocs = start : loop initialPad gameState (tail keyprocs)
+	where
+		frameCount = 120
+
+		start _ _ = do
+			playBGM $ bgmPath ++ bgmFn BGMMain
+
+		branch =
+			if num_pl_of gs > 1
+				then doDispRest fldmap gs' keyprocs
+				else doGameOver fldmap gs' keyprocs
+			where
+				gs' = gs { num_pl_of = num_pl_of gs - 1 }
+-}
 
 -- GameOver
 doGameOver :: Field -> GameGame -> [KeyProc] -> [Resources -> Scr]

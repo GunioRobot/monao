@@ -18,7 +18,8 @@ module Player (
 	getPlayerType,
 	setPlayerType,
 	setPlayerDamage,
-	stampPlayer
+	stampPlayer,
+	getPlayerDead
 ) where
 
 import Graphics.UI.SDL (Surface)
@@ -53,7 +54,7 @@ data PlayerType = SmallMonao | SuperMonao | FireMonao
 	deriving (Eq)
 
 -- State
-data PlayerState = Normal | Dead
+data PlayerState = Normal | DeadFall | Dead
 	deriving (Eq)
 
 -- Structure
@@ -105,12 +106,12 @@ patJump = patWalk + walkPatNum
 patSlip = patJump + 1
 patSit = patSlip + 1
 patShot = patSit + 1
-patDead = patShot + 2
+patDead = patShot + 1
 
 imgTableSmall, imgTableSuper, imgTableFire :: [[ImageType]]
 imgTableSmall = [
-	[ImgMonaoLStand, ImgMonaoLWalk1, ImgMonaoLWalk2, ImgMonaoLWalk3, ImgMonaoLJump, ImgMonaoLSlip, ImgMonaoLStand],
-	[ImgMonaoRStand, ImgMonaoRWalk1, ImgMonaoRWalk2, ImgMonaoRWalk3, ImgMonaoRJump, ImgMonaoRSlip, ImgMonaoRStand]
+	[ImgMonaoLStand, ImgMonaoLWalk1, ImgMonaoLWalk2, ImgMonaoLWalk3, ImgMonaoLJump, ImgMonaoLSlip, ImgMonaoLStand, ImgMonaoLStand, ImgMonaoDead],
+	[ImgMonaoRStand, ImgMonaoRWalk1, ImgMonaoRWalk2, ImgMonaoRWalk3, ImgMonaoRJump, ImgMonaoRSlip, ImgMonaoRStand, ImgMonaoLStand, ImgMonaoDead]
 	]
 imgTableSuper = [
 	[ImgSMonaoLStand, ImgSMonaoLWalk1, ImgSMonaoLWalk2, ImgSMonaoLWalk3, ImgSMonaoLJump, ImgSMonaoLSlip, ImgSMonaoLSit],
@@ -264,8 +265,9 @@ shot pad self
 updatePlayer :: Pad -> Field -> Player -> (Player, [Event])
 updatePlayer pad fld self =
 	case plstate self of
-		Normal	-> updateNormal pad fld self'
-		Dead	-> updateDead pad fld self'
+		Normal		-> updateNormal pad fld self'
+		DeadFall	-> updateDeadFall pad fld self'
+		Dead		-> updateDead pad fld self'
 	where
 		self' = decUndead self
 		decUndead pl = pl { undeadCount = max 0 $ undeadCount pl - 1 }
@@ -278,6 +280,10 @@ updateNormal pad fld self = (self3, ev1 ++ ev2 ++ ev3)
 		(self2, ev2) = checkCeil fld self1
 		(self3, ev3) = shot pad self2
 		moveY = doJump pad . checkFloor fld . fall (pressing pad padA)
+
+-- In dead state
+updateDeadFall :: Pad -> Field -> Player -> (Player, [Event])
+updateDeadFall _ _ self = (fall False self, [])
 
 -- In dead state
 updateDead :: Pad -> Field -> Player -> (Player, [Event])
@@ -326,7 +332,7 @@ setPlayerType t self = self { pltype = t }
 setPlayerDamage :: Player -> Player
 setPlayerDamage self
 	| undeadCount self > 0			= self
-	| pltype self == SmallMonao		= self { plstate = Dead, pat = patDead, vy = jumpVy, stand = False }
+	| pltype self == SmallMonao		= self { pltype = SmallMonao, plstate = DeadFall, pat = patDead, vy = jumpVy, stand = False }
 	| otherwise						= self { pltype = SmallMonao, undeadCount = undeadFrame }
 
 -- Stamp enemy
@@ -340,6 +346,11 @@ playerGetCoin self = self { coin = (coin self + 1) `mod` 100 }
 -- Add score
 addScore :: Int -> Player -> Player
 addScore a self = self { score = score self + a }
+
+-- Player is dead?
+getPlayerDead :: Player -> Bool
+getPlayerDead self =
+	plstate self /= Normal
 
 -- Render
 renderPlayer :: Surface -> ImageResource -> Int -> Player -> IO ()
